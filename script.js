@@ -309,6 +309,14 @@
     watermarkBtn.textContent      = state.watermarkVisible ? 'Hide Watermark' : 'Show Watermark';
   });
 
+  // ── SECONDARY WATERMARK TOGGLE ────────────────────────────────
+  const watermark2Layer  = document.getElementById('watermark2-layer');
+  const watermark2Toggle = document.getElementById('watermark2-toggle');
+
+  watermark2Toggle.addEventListener('change', () => {
+    watermark2Layer.style.display = watermark2Toggle.checked ? '' : 'none';
+  });
+
   // ── PNG DPI INJECTION ─────────────────────────────────────────
   const CRC_TABLE = (function () {
     const t = new Uint32Array(256);
