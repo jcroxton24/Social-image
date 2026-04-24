@@ -27,6 +27,7 @@
   const fileInput       = document.getElementById('file-input');
   const urlInput        = document.getElementById('url-input');
   const urlBtn          = document.getElementById('url-btn');
+  const removeBtn       = document.getElementById('remove-btn');
   const watermarkBtn    = document.getElementById('watermark-btn');
   const watermarkLayer  = document.getElementById('watermark-layer');
   const exportBtn       = document.getElementById('export-btn');
@@ -134,9 +135,9 @@
     state.imgX = (1080 - state.imgW) / 2;
     state.imgY = (1350 - state.imgH) / 2;
 
-    // Point the ghost at the same image source so it renders the overflow
-    imageGhost.src          = img.src;
+    imageGhost.src           = img.src;
     imageGhost.style.display = '';
+    removeBtn.style.display  = '';
 
     drawImage();
     positionHandles();
@@ -189,6 +190,16 @@
 
     img.src = url;
   }
+
+  // ── REMOVE IMAGE ─────────────────────────────────────────────
+  removeBtn.addEventListener('click', () => {
+    state.img = null;
+    ctx.clearRect(0, 0, 1080, 1350);
+    imageGhost.src           = '';
+    imageGhost.style.display = 'none';
+    imageHandles.classList.add('hidden');
+    removeBtn.style.display  = 'none';
+  });
 
   // ── DRAG ──────────────────────────────────────────────────────
   let dragging  = false;
