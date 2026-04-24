@@ -8,6 +8,7 @@
     imgY: 0,
     imgW: 1080,
     imgH: 1350,
+    imgAspect: 1,     // naturalWidth / naturalHeight, locked on upload
     watermarkVisible: true,
   };
 
@@ -33,8 +34,8 @@
   let currentScale = 1;
 
   function scaleCanvas() {
-    const availW = wrapper.clientWidth  - 48;
-    const availH = wrapper.clientHeight - 48;
+    const availW = wrapper.clientWidth  - 64;
+    const availH = wrapper.clientHeight - 64;
     const scale  = Math.min(availW / 1080, availH / 1350, 1);
     currentScale = scale;
 
@@ -68,7 +69,7 @@
     }
   }
 
-  // ── HANDLE POSITIONING ────────────────────────────────────────
+  // ── HANDLE POSITIONING (corners only) ────────────────────────
   function positionHandles() {
     const { imgX: x, imgY: y, imgW: w, imgH: h } = state;
 
@@ -78,14 +79,10 @@
     selBorder.style.height = h + 'px';
 
     const positions = {
-      tl: [x,       y      ],
-      tm: [x + w/2, y      ],
-      tr: [x + w,   y      ],
-      ml: [x,       y + h/2],
-      mr: [x + w,   y + h/2],
-      bl: [x,       y + h  ],
-      bm: [x + w/2, y + h  ],
-      br: [x + w,   y + h  ],
+      tl: [x,     y    ],
+      tr: [x + w, y    ],
+      bl: [x,     y + h],
+      br: [x + w, y + h],
     };
 
     document.querySelectorAll('.handle').forEach(handle => {
@@ -104,21 +101,21 @@
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      state.img = img;
+      state.img       = img;
+      state.imgAspect = img.naturalWidth / img.naturalHeight;
+
       // Cover-fit: fill the canvas, centred
-      const scaleX = 1080 / img.naturalWidth;
-      const scaleY = 1350 / img.naturalHeight;
-      const fit    = Math.max(scaleX, scaleY);
-      state.imgW = img.naturalWidth  * fit;
-      state.imgH = img.naturalHeight * fit;
-      state.imgX = (1080 - state.imgW) / 2;
-      state.imgY = (1350 - state.imgH) / 2;
+      const fit    = Math.max(1080 / img.naturalWidth, 1350 / img.naturalHeight);
+      state.imgW   = img.naturalWidth  * fit;
+      state.imgH   = img.naturalHeight * fit;
+      state.imgX   = (1080 - state.imgW) / 2;
+      state.imgY   = (1350 - state.imgH) / 2;
+
       drawImage();
       positionHandles();
       imageHandles.classList.remove('hidden');
     };
     img.src = url;
-    // Reset so the same file can be re-selected
     fileInput.value = '';
   });
 
@@ -127,7 +124,6 @@
   let dragStart = {};
 
   appCanvas.addEventListener('mousedown', e => {
-    // Only start drag if the click is on a layer (not a handle)
     if (e.target.classList.contains('handle')) return;
     if (!state.img) return;
 
@@ -145,9 +141,9 @@
 
   document.addEventListener('mousemove', e => {
     if (!dragging) return;
-    const pt    = canvasPoint(e.clientX, e.clientY);
-    state.imgX  = dragStart.imgX + (pt.x - dragStart.x);
-    state.imgY  = dragStart.imgY + (pt.y - dragStart.y);
+    const pt   = canvasPoint(e.clientX, e.clientY);
+    state.imgX = dragStart.imgX + (pt.x - dragStart.x);
+    state.imgY = dragStart.imgY + (pt.y - dragStart.y);
     drawImage();
     positionHandles();
   });
@@ -157,13 +153,11 @@
       dragging = false;
       appCanvas.style.cursor = '';
     }
-    if (resizing) {
-      resizing = false;
-      resizeHandle = null;
-    }
+    resizing     = false;
+    resizeHandle = null;
   });
 
-  // ── RESIZE ────────────────────────────────────────────────────
+  // ── PROPORTIONAL RESIZE (corner handles, locked aspect ratio) ─
   let resizing     = false;
   let resizeHandle = null;
   let resizeStart  = {};
@@ -175,9 +169,7 @@
       e.preventDefault();
       resizing     = true;
       resizeHandle = handle.dataset.handle;
-      const pt     = canvasPoint(e.clientX, e.clientY);
       resizeStart  = {
-        pt,
         imgX: state.imgX,
         imgY: state.imgY,
         imgW: state.imgW,
@@ -188,33 +180,39 @@
 
   document.addEventListener('mousemove', e => {
     if (!resizing) return;
-    const pt = canvasPoint(e.clientX, e.clientY);
-    const dx = pt.x - resizeStart.pt.x;
-    const dy = pt.y - resizeStart.pt.y;
-    let { imgX, imgY, imgW, imgH } = resizeStart;
-    const h = resizeHandle;
+    const pt     = canvasPoint(e.clientX, e.clientY);
+    const aspect = state.imgAspect;
+    const { imgX, imgY, imgW, imgH } = resizeStart;
+    let newX = imgX, newY = imgY, newW, newH;
 
-    if (h === 'tr' || h === 'mr' || h === 'br') {
-      imgW = Math.max(MIN_SIZE, imgW + dx);
-    }
-    if (h === 'tl' || h === 'ml' || h === 'bl') {
-      const newW = Math.max(MIN_SIZE, imgW - dx);
-      imgX = imgX + imgW - newW;
-      imgW = newW;
-    }
-    if (h === 'bl' || h === 'bm' || h === 'br') {
-      imgH = Math.max(MIN_SIZE, imgH + dy);
-    }
-    if (h === 'tl' || h === 'tm' || h === 'tr') {
-      const newH = Math.max(MIN_SIZE, imgH - dy);
-      imgY = imgY + imgH - newH;
-      imgH = newH;
+    // Each corner scales from the diagonally opposite (fixed) corner.
+    // Width is the primary axis; height follows the locked aspect ratio.
+    if (resizeHandle === 'br') {
+      newW = Math.max(MIN_SIZE, pt.x - imgX);
+      newH = newW / aspect;
+      newX = imgX;
+      newY = imgY;
+    } else if (resizeHandle === 'bl') {
+      newW = Math.max(MIN_SIZE, (imgX + imgW) - pt.x);
+      newH = newW / aspect;
+      newX = (imgX + imgW) - newW;
+      newY = imgY;
+    } else if (resizeHandle === 'tr') {
+      newW = Math.max(MIN_SIZE, pt.x - imgX);
+      newH = newW / aspect;
+      newX = imgX;
+      newY = (imgY + imgH) - newH;
+    } else { // tl
+      newW = Math.max(MIN_SIZE, (imgX + imgW) - pt.x);
+      newH = newW / aspect;
+      newX = (imgX + imgW) - newW;
+      newY = (imgY + imgH) - newH;
     }
 
-    state.imgX = imgX;
-    state.imgY = imgY;
-    state.imgW = imgW;
-    state.imgH = imgH;
+    state.imgX = newX;
+    state.imgY = newY;
+    state.imgW = newW;
+    state.imgH = newH;
     drawImage();
     positionHandles();
   });
@@ -226,20 +224,93 @@
 
   // ── WATERMARK TOGGLE ──────────────────────────────────────────
   watermarkBtn.addEventListener('click', () => {
-    state.watermarkVisible = !state.watermarkVisible;
-    watermarkLayer.style.display = state.watermarkVisible ? '' : 'none';
-    watermarkBtn.textContent     = state.watermarkVisible ? 'Hide Watermark' : 'Show Watermark';
+    state.watermarkVisible        = !state.watermarkVisible;
+    watermarkLayer.style.display  = state.watermarkVisible ? '' : 'none';
+    watermarkBtn.textContent      = state.watermarkVisible ? 'Hide Watermark' : 'Show Watermark';
   });
+
+  // ── PNG DPI INJECTION ─────────────────────────────────────────
+  // Builds and inserts a pHYs chunk into a PNG data URL so the
+  // exported file carries the correct pixel density metadata.
+
+  const CRC_TABLE = (function () {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) {
+        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      }
+      t[n] = c;
+    }
+    return t;
+  }());
+
+  function crc32(data) {
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < data.length; i++) {
+      crc = CRC_TABLE[(crc ^ data[i]) & 0xFF] ^ (crc >>> 8);
+    }
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function writePngDpi(dataUrl, dpi) {
+    // Decode base64 PNG
+    const base64  = dataUrl.split(',')[1];
+    const binary  = atob(base64);
+    const src     = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) src[i] = binary.charCodeAt(i);
+
+    // Build pHYs chunk data (pixels per metre, unit = 1)
+    // 200 ppi × (1 / 0.0254 m per inch) = 7874 pixels/metre
+    const ppm  = Math.round(dpi / 0.0254);
+    const type = new Uint8Array([0x70, 0x48, 0x59, 0x73]); // "pHYs"
+    const data = new Uint8Array(9);
+    // Pixels per unit X and Y (big-endian uint32)
+    data[0] = (ppm >>> 24) & 0xFF;
+    data[1] = (ppm >>> 16) & 0xFF;
+    data[2] = (ppm >>>  8) & 0xFF;
+    data[3] = (ppm       ) & 0xFF;
+    data[4] = data[0]; data[5] = data[1]; data[6] = data[2]; data[7] = data[3];
+    data[8] = 1; // unit: metre
+
+    // CRC covers type + data (13 bytes)
+    const crcInput = new Uint8Array(13);
+    crcInput.set(type, 0);
+    crcInput.set(data, 4);
+    const crcVal = crc32(crcInput);
+
+    // Full chunk: length(4) + type(4) + data(9) + crc(4) = 21 bytes
+    const chunk = new Uint8Array(21);
+    chunk[3] = 9; // data length = 9 (big-endian, high bytes stay 0)
+    chunk.set(type, 4);
+    chunk.set(data, 8);
+    chunk[17] = (crcVal >>> 24) & 0xFF;
+    chunk[18] = (crcVal >>> 16) & 0xFF;
+    chunk[19] = (crcVal >>>  8) & 0xFF;
+    chunk[20] = (crcVal       ) & 0xFF;
+
+    // Insert after the IHDR chunk which always ends at byte 33
+    // (8 sig + 4 len + 4 type + 13 data + 4 crc = 33)
+    const insertAt = 33;
+    const out = new Uint8Array(src.length + chunk.length);
+    out.set(src.slice(0, insertAt), 0);
+    out.set(chunk, insertAt);
+    out.set(src.slice(insertAt), insertAt + chunk.length);
+
+    // Re-encode as base64 data URL
+    let s = '';
+    for (let i = 0; i < out.length; i++) s += String.fromCharCode(out[i]);
+    return 'data:image/png;base64,' + btoa(s);
+  }
 
   // ── EXPORT ────────────────────────────────────────────────────
   exportBtn.addEventListener('click', async () => {
     exportBtn.textContent = 'Preparing…';
     exportBtn.disabled    = true;
 
-    // Hide handles
     imageHandles.classList.add('hidden');
 
-    // Remove scale transform so html2canvas captures at true 1080×1350
+    // Strip scale transform so html2canvas captures at full 1080×1350
     const savedTransform  = appCanvas.style.transform;
     const savedMarginLeft = appCanvas.style.marginLeft;
     const savedMarginTop  = appCanvas.style.marginTop;
@@ -261,15 +332,18 @@
         imageTimeout:    0,
       });
 
-      const link      = document.createElement('a');
-      link.download   = 'social-image.png';
-      link.href       = output.toDataURL('image/png');
+      // Inject 200ppi DPI metadata into the PNG
+      const rawDataUrl = output.toDataURL('image/png');
+      const dpiDataUrl = writePngDpi(rawDataUrl, 200);
+
+      const link    = document.createElement('a');
+      link.download = 'social-image.png';
+      link.href     = dpiDataUrl;
       link.click();
     } catch (err) {
       console.error('Export failed:', err);
       alert('Export failed. Please try again.');
     } finally {
-      // Restore visual state
       appCanvas.style.transform  = savedTransform;
       appCanvas.style.marginLeft = savedMarginLeft;
       appCanvas.style.marginTop  = savedMarginTop;
@@ -281,4 +355,4 @@
     }
   });
 
-})();
+}());

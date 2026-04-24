@@ -28,8 +28,16 @@ html, body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 24px;
-  background: #1a1a1a;
+  padding: 32px;
+  /* Checkerboard pattern clearly marks the working area boundary */
+  background-color: #3a3a3a;
+  background-image:
+    linear-gradient(45deg, #464646 25%, transparent 25%),
+    linear-gradient(-45deg, #464646 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #464646 75%),
+    linear-gradient(-45deg, transparent 75%, #464646 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
 
 /* ── THE CANVAS ──────────────────────────────────────────────── */
@@ -41,7 +49,11 @@ html, body {
   background: #111;
   transform-origin: top left;
   flex-shrink: 0;
-  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.7);
+  /* Strong shadow + white outline to clearly separate canvas from background */
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.18),
+    0 12px 64px rgba(0, 0, 0, 0.8),
+    0 4px 16px rgba(0, 0, 0, 0.6);
   cursor: default;
 }
 
@@ -138,25 +150,21 @@ html, body {
 }
 
 .handle.tl { cursor: nwse-resize; }
-.handle.tm { cursor: ns-resize; }
 .handle.tr { cursor: nesw-resize; }
-.handle.ml { cursor: ew-resize; }
-.handle.mr { cursor: ew-resize; }
 .handle.bl { cursor: nesw-resize; }
-.handle.bm { cursor: ns-resize; }
 .handle.br { cursor: nwse-resize; }
 
 /* ── CONTROLS PANEL ──────────────────────────────────────────── */
 #controls {
   width: 300px;
   flex-shrink: 0;
-  background: #242424;
+  background: #1e1e1e;
   padding: 32px 24px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 28px;
-  border-left: 1px solid #333;
+  border-left: 1px solid #2e2e2e;
 }
 
 #controls h1 {
@@ -182,15 +190,15 @@ html, body {
 
 .hint {
   font-size: 12px;
-  color: #666;
+  color: #555;
   line-height: 1.4;
 }
 
 button {
   padding: 11px 16px;
   border-radius: 8px;
-  border: 1px solid #444;
-  background: #333;
+  border: 1px solid #3a3a3a;
+  background: #2a2a2a;
   color: #f0f0f0;
   font-size: 14px;
   cursor: pointer;
@@ -199,8 +207,8 @@ button {
 }
 
 button:hover:not(:disabled) {
-  background: #3a3a3a;
-  border-color: #555;
+  background: #333;
+  border-color: #4a4a4a;
 }
 
 button.primary {
@@ -224,8 +232,8 @@ button:disabled {
 textarea {
   resize: vertical;
   padding: 10px 12px;
-  background: #1a1a1a;
-  border: 1px solid #3a3a3a;
+  background: #141414;
+  border: 1px solid #2e2e2e;
   border-radius: 8px;
   color: #f0f0f0;
   font-size: 14px;
@@ -240,5 +248,34 @@ textarea:focus {
 }
 
 textarea::placeholder {
-  color: #555;
+  color: #444;
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  html, body {
+    height: auto;
+    overflow-y: auto;
+  }
+
+  #app {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  #canvas-wrapper {
+    /* Height accounts for portrait canvas ratio (1350/1080 = 1.25) plus padding */
+    height: calc(100vw * 1.25 + 64px);
+    min-height: 360px;
+    padding: 20px;
+  }
+
+  #controls {
+    width: 100%;
+    flex-shrink: 0;
+    border-left: none;
+    border-top: 1px solid #2e2e2e;
+    padding: 24px 20px;
+  }
 }
