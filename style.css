@@ -24,12 +24,9 @@ html, body {
 #canvas-wrapper {
   flex: 1 1 auto;
   min-width: 0;
-  position: relative;          /* needed to anchor the scale indicator */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: 0;                  /* border guarantee is handled by JS */
+  position: relative;
+  overflow-y: auto;            /* allows scrolling when canvas + borders exceed viewport */
+  overflow-x: hidden;
   /* Checkerboard pattern clearly marks the working area boundary */
   background-color: #3a3a3a;
   background-image:
@@ -39,6 +36,12 @@ html, body {
     linear-gradient(-45deg, transparent 75%, #464646 75%);
   background-size: 20px 20px;
   background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* Spacer that gives the wrapper its scroll height — sized by JS */
+#canvas-spacer {
+  display: block;
+  pointer-events: none;
 }
 
 /* Scale percentage badge in the checkerboard gutter */
@@ -60,11 +63,10 @@ html, body {
 #canvas {
   width: 1080px;
   height: 1350px;
-  position: relative;
+  position: absolute;          /* positioned by JS — removes it from layout flow */
   overflow: hidden;
   background: transparent;     /* transparent until an image is uploaded */
   transform-origin: top left;
-  flex-shrink: 0;
   /* Strong shadow + white outline to clearly separate canvas from background */
   box-shadow:
     0 0 0 2px rgba(255, 255, 255, 0.18),
@@ -265,6 +267,39 @@ textarea:focus {
 
 textarea::placeholder {
   color: #444;
+}
+
+/* ── URL INPUT ROW ───────────────────────────────────────────── */
+.url-row {
+  display: flex;
+  gap: 6px;
+}
+
+.url-row input[type="text"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 10px 12px;
+  background: #141414;
+  border: 1px solid #2e2e2e;
+  border-radius: 8px;
+  color: #f0f0f0;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.12s;
+}
+
+.url-row input[type="text"]:focus {
+  outline: none;
+  border-color: #0070f3;
+}
+
+.url-row input[type="text"]::placeholder {
+  color: #444;
+}
+
+.url-row button {
+  flex-shrink: 0;
+  padding: 10px 14px;
 }
 
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
