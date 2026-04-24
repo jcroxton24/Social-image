@@ -1,0 +1,244 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #111;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #f0f0f0;
+}
+
+/* ── APP LAYOUT ──────────────────────────────────────────────── */
+#app {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── CANVAS WRAPPER ──────────────────────────────────────────── */
+#canvas-wrapper {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 24px;
+  background: #1a1a1a;
+}
+
+/* ── THE CANVAS ──────────────────────────────────────────────── */
+#canvas {
+  width: 1080px;
+  height: 1350px;
+  position: relative;
+  overflow: hidden;
+  background: #111;
+  transform-origin: top left;
+  flex-shrink: 0;
+  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.7);
+  cursor: default;
+}
+
+/* ── ALL LAYERS ──────────────────────────────────────────────── */
+#image-layer,
+#gradient-layer,
+#text-layer,
+#watermark-layer,
+#image-handles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1080px;
+  height: 1350px;
+  pointer-events: none;
+}
+
+/* ── LAYER 1: IMAGE CANVAS ───────────────────────────────────── */
+#image-layer {
+  z-index: 1;
+}
+
+/* ── LAYER 2: GRADIENT ───────────────────────────────────────── */
+#gradient-layer {
+  z-index: 2;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0)   50%
+  );
+}
+
+/* ── LAYER 3: TEXT ───────────────────────────────────────────── */
+#text-layer {
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 50px;
+}
+
+#headline-display {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 30pt;
+  color: #ffffff;
+  line-height: 1.15;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+  white-space: normal;
+  width: 100%;
+}
+
+/* ── LAYER 4: WATERMARK ──────────────────────────────────────── */
+#watermark-layer {
+  z-index: 4;
+  position: absolute;
+  top: 0;
+  left: 93px;
+  width: auto;
+  height: auto;
+}
+
+#watermark-img {
+  display: block;
+  max-width: 300px;
+}
+
+/* ── LAYER 5: HANDLES ────────────────────────────────────────── */
+#image-handles {
+  z-index: 5;
+}
+
+#image-handles.hidden {
+  display: none;
+}
+
+#selection-border {
+  position: absolute;
+  border: 2px solid rgba(0, 120, 255, 0.8);
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+.handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border: 2px solid #0070f3;
+  border-radius: 50%;
+  pointer-events: all;
+  transform: translate(-50%, -50%);
+}
+
+.handle.tl { cursor: nwse-resize; }
+.handle.tm { cursor: ns-resize; }
+.handle.tr { cursor: nesw-resize; }
+.handle.ml { cursor: ew-resize; }
+.handle.mr { cursor: ew-resize; }
+.handle.bl { cursor: nesw-resize; }
+.handle.bm { cursor: ns-resize; }
+.handle.br { cursor: nwse-resize; }
+
+/* ── CONTROLS PANEL ──────────────────────────────────────────── */
+#controls {
+  width: 300px;
+  flex-shrink: 0;
+  background: #242424;
+  padding: 32px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  border-left: 1px solid #333;
+}
+
+#controls h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f0f0f0;
+  letter-spacing: 0.02em;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-group label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hint {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+button {
+  padding: 11px 16px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #333;
+  color: #f0f0f0;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  text-align: center;
+}
+
+button:hover:not(:disabled) {
+  background: #3a3a3a;
+  border-color: #555;
+}
+
+button.primary {
+  background: #0070f3;
+  border-color: #005ecc;
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 13px 16px;
+}
+
+button.primary:hover:not(:disabled) {
+  background: #005ecc;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+textarea {
+  resize: vertical;
+  padding: 10px 12px;
+  background: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  color: #f0f0f0;
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: inherit;
+  transition: border-color 0.12s;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #0070f3;
+}
+
+textarea::placeholder {
+  color: #555;
+}

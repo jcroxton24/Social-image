@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Image Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="app">
+
+    <div id="canvas-wrapper">
+      <div id="canvas">
+
+        <!-- Layer 1: Image (bottom) -->
+        <canvas id="image-layer"></canvas>
+
+        <!-- Layer 2: Gradient (middle) -->
+        <div id="gradient-layer"></div>
+
+        <!-- Layer 3: Headline text -->
+        <div id="text-layer">
+          <p id="headline-display"></p>
+        </div>
+
+        <!-- Layer 4: Watermark (top) -->
+        <div id="watermark-layer">
+          <img id="watermark-img" src="https://cdn.mos.cms.futurecdn.net/fDRfpLwbDo4YTNyaG3xyrf.png" crossorigin="anonymous" alt="Watermark">
+        </div>
+
+        <!-- Layer 5: Drag/resize handles -->
+        <div id="image-handles" class="hidden">
+          <div id="selection-border"></div>
+          <div class="handle tl" data-handle="tl"></div>
+          <div class="handle tm" data-handle="tm"></div>
+          <div class="handle tr" data-handle="tr"></div>
+          <div class="handle ml" data-handle="ml"></div>
+          <div class="handle mr" data-handle="mr"></div>
+          <div class="handle bl" data-handle="bl"></div>
+          <div class="handle bm" data-handle="bm"></div>
+          <div class="handle br" data-handle="br"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <aside id="controls">
+      <h1>Create Your Post</h1>
+
+      <section class="control-group">
+        <label>Photo</label>
+        <button id="upload-btn">Upload Image</button>
+        <input type="file" id="file-input" accept="image/*" hidden>
+        <p class="hint">Drag to reposition. Pull corners to resize.</p>
+      </section>
+
+      <section class="control-group">
+        <label for="headline-input">Headline</label>
+        <textarea id="headline-input" placeholder="Enter your headline here…" rows="5"></textarea>
+      </section>
+
+      <section class="control-group">
+        <button id="watermark-btn">Hide Watermark</button>
+      </section>
+
+      <section class="control-group">
+        <button id="export-btn" class="primary">Download Image</button>
+      </section>
+    </aside>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
