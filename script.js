@@ -314,7 +314,7 @@
   const watermark2Toggle = document.getElementById('watermark2-toggle');
 
   watermark2Toggle.addEventListener('change', () => {
-    watermark2Layer.style.display = watermark2Toggle.checked ? '' : 'none';
+    watermark2Layer.style.display = watermark2Toggle.checked ? 'block' : 'none';
   });
 
   // ── THIRD WATERMARK TOGGLE ─────────────────────────────────────
@@ -322,7 +322,7 @@
   const watermark3Toggle = document.getElementById('watermark3-toggle');
 
   watermark3Toggle.addEventListener('change', () => {
-    watermark3Layer.style.display = watermark3Toggle.checked ? '' : 'none';
+    watermark3Layer.style.display = watermark3Toggle.checked ? 'block' : 'none';
   });
 
   // ── PNG DPI INJECTION ─────────────────────────────────────────
