@@ -17,6 +17,7 @@
   const wrapper         = document.getElementById('canvas-wrapper');
   const canvasSpacer    = document.getElementById('canvas-spacer');
   const scaleIndicator  = document.getElementById('scale-indicator');
+  const imageGhost      = document.getElementById('image-ghost');
   const imageCanvas     = document.getElementById('image-layer');
   const imageHandles    = document.getElementById('image-handles');
   const selBorder       = document.getElementById('selection-border');
@@ -85,6 +86,18 @@
     if (state.img) {
       ctx.drawImage(state.img, state.imgX, state.imgY, state.imgW, state.imgH);
     }
+    updateGhost();
+  }
+
+  // Positions the ghost <img> to match the current image state.
+  // The ghost is inside #canvas (overflow:visible) and shows the
+  // portions of the image that fall outside the 1080×1350 frame.
+  function updateGhost() {
+    if (!state.img) return;
+    imageGhost.style.left   = state.imgX + 'px';
+    imageGhost.style.top    = state.imgY + 'px';
+    imageGhost.style.width  = state.imgW + 'px';
+    imageGhost.style.height = state.imgH + 'px';
   }
 
   // ── HANDLE POSITIONING ────────────────────────────────────────
@@ -120,6 +133,10 @@
     state.imgH = img.naturalHeight * fit;
     state.imgX = (1080 - state.imgW) / 2;
     state.imgY = (1350 - state.imgH) / 2;
+
+    // Point the ghost at the same image source so it renders the overflow
+    imageGhost.src          = img.src;
+    imageGhost.style.display = '';
 
     drawImage();
     positionHandles();

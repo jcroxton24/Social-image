@@ -25,8 +25,7 @@ html, body {
   flex: 1 1 auto;
   min-width: 0;
   position: relative;
-  overflow-y: auto;            /* allows scrolling when canvas + borders exceed viewport */
-  overflow-x: hidden;
+  overflow: hidden;            /* clips the image ghost so it never triggers scrollbars */
   /* Checkerboard pattern clearly marks the working area boundary */
   background-color: #3a3a3a;
   background-image:
@@ -64,7 +63,7 @@ html, body {
   width: 1080px;
   height: 1350px;
   position: absolute;          /* positioned by JS — removes it from layout flow */
-  overflow: hidden;
+  overflow: visible;           /* image ghost extends beyond frame at 20% opacity */
   background: transparent;     /* transparent until an image is uploaded */
   transform-origin: top left;
   /* Strong shadow + white outline to clearly separate canvas from background */
@@ -73,6 +72,16 @@ html, body {
     0 12px 64px rgba(0, 0, 0, 0.8),
     0 4px 16px rgba(0, 0, 0, 0.6);
   cursor: default;
+}
+
+/* Ghost image — overflow shown at 20% opacity, excluded from export */
+#image-ghost {
+  position: absolute;
+  display: none;               /* shown by JS once an image is loaded */
+  opacity: 0.2;
+  pointer-events: none;
+  z-index: 0;
+  transform-origin: top left;
 }
 
 /* ── ALL LAYERS ──────────────────────────────────────────────── */
