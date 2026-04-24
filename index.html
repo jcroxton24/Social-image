@@ -43,6 +43,11 @@
           <img id="watermark2-img" src="https://cdn.mos.cms.futurecdn.net/sW6rc26SD5UmPrBCgWHfP3.png" crossorigin="anonymous" alt="Secondary watermark">
         </div>
 
+        <!-- Layer 4c: Third watermark — off by default -->
+        <div id="watermark3-layer">
+          <img id="watermark3-img" src="https://cdn.mos.cms.futurecdn.net/fko79tmMy6qTroLb6KpiP3.png" crossorigin="anonymous" alt="Third watermark">
+        </div>
+
         <!-- Layer 5: Drag/resize handles (corners only — proportional scale) -->
         <div id="image-handles" class="hidden">
           <div id="selection-border"></div>
@@ -85,6 +90,17 @@
           <span>Show watermark</span>
           <label class="toggle">
             <input type="checkbox" id="watermark2-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <section class="control-group">
+        <label>Third Watermark</label>
+        <div class="toggle-row">
+          <span>Show watermark</span>
+          <label class="toggle">
+            <input type="checkbox" id="watermark3-toggle">
             <span class="toggle-slider"></span>
           </label>
         </div>

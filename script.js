@@ -317,6 +317,14 @@
     watermark2Layer.style.display = watermark2Toggle.checked ? '' : 'none';
   });
 
+  // ── THIRD WATERMARK TOGGLE ─────────────────────────────────────
+  const watermark3Layer  = document.getElementById('watermark3-layer');
+  const watermark3Toggle = document.getElementById('watermark3-toggle');
+
+  watermark3Toggle.addEventListener('change', () => {
+    watermark3Layer.style.display = watermark3Toggle.checked ? '' : 'none';
+  });
+
   // ── PNG DPI INJECTION ─────────────────────────────────────────
   const CRC_TABLE = (function () {
     const t = new Uint32Array(256);

@@ -165,6 +165,21 @@ html, body {
   max-width: 300px;
 }
 
+#watermark3-layer {
+  z-index: 4;
+  position: absolute;
+  top: 32px;
+  right: 32px;
+  width: auto;
+  height: auto;
+  display: none;
+}
+
+#watermark3-img {
+  display: block;
+  max-width: 300px;
+}
+
 /* ── LAYER 5: HANDLES ────────────────────────────────────────── */
 #image-handles {
   z-index: 5;
