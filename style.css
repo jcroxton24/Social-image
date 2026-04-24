@@ -111,11 +111,12 @@ html, body {
   align-items: flex-end;
   justify-content: flex-start;
   padding: 50px;
+  padding-bottom: 36px;  /* compensates for Bebas Neue descender + half-leading at 84px */
 }
 
 #headline-display {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 60px;
+  font-size: 84px;       /* 60px ÷ 0.717 cap-height ratio = true 60px visual cap height */
   color: #ffffff;
   line-height: 1.15;
   word-break: normal;
