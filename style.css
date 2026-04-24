@@ -130,8 +130,8 @@ html, body {
 #watermark-layer {
   z-index: 4;
   position: absolute;
-  top: 0;
-  left: 93px;
+  top: -3px;
+  left: 84px;
   width: auto;
   height: auto;
 }
