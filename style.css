@@ -24,11 +24,12 @@ html, body {
 #canvas-wrapper {
   flex: 1 1 auto;
   min-width: 0;
+  position: relative;          /* needed to anchor the scale indicator */
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 32px;
+  padding: 0;                  /* border guarantee is handled by JS */
   /* Checkerboard pattern clearly marks the working area boundary */
   background-color: #3a3a3a;
   background-image:
@@ -40,13 +41,28 @@ html, body {
   background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
 
+/* Scale percentage badge in the checkerboard gutter */
+#scale-indicator {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 10;
+}
+
 /* ── THE CANVAS ──────────────────────────────────────────────── */
 #canvas {
   width: 1080px;
   height: 1350px;
   position: relative;
   overflow: hidden;
-  background: #111;
+  background: transparent;     /* transparent until an image is uploaded */
   transform-origin: top left;
   flex-shrink: 0;
   /* Strong shadow + white outline to clearly separate canvas from background */
@@ -97,7 +113,7 @@ html, body {
 
 #headline-display {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 30pt;
+  font-size: 60px;
   color: #ffffff;
   line-height: 1.15;
   word-break: normal;
@@ -265,10 +281,10 @@ textarea::placeholder {
   }
 
   #canvas-wrapper {
-    /* Height accounts for portrait canvas ratio (1350/1080 = 1.25) plus padding */
-    height: calc(100vw * 1.25 + 64px);
+    /* Height: portrait canvas ratio (1350/1080 = 1.25) × available width + 2× border */
+    height: calc(100vw * 1.25 + 96px);
     min-height: 360px;
-    padding: 20px;
+    padding: 0;
   }
 
   #controls {

@@ -13,8 +13,9 @@
   };
 
   // ── ELEMENT REFS ──────────────────────────────────────────────
-  const appCanvas      = document.getElementById('canvas');
-  const wrapper        = document.getElementById('canvas-wrapper');
+  const appCanvas       = document.getElementById('canvas');
+  const wrapper         = document.getElementById('canvas-wrapper');
+  const scaleIndicator  = document.getElementById('scale-indicator');
   const imageCanvas    = document.getElementById('image-layer');
   const imageHandles   = document.getElementById('image-handles');
   const selBorder      = document.getElementById('selection-border');
@@ -34,9 +35,13 @@
   let currentScale = 1;
 
   function scaleCanvas() {
-    const availW = wrapper.clientWidth  - 64;
-    const availH = wrapper.clientHeight - 64;
-    const scale  = Math.min(availW / 1080, availH / 1350, 1);
+    // Always keep at least BORDER px of visible checkerboard on every side
+    const BORDER = 48;
+    const scale  = Math.min(
+      (wrapper.clientWidth  - BORDER * 2) / 1080,
+      (wrapper.clientHeight - BORDER * 2) / 1350,
+      1
+    );
     currentScale = scale;
 
     const scaledW = 1080 * scale;
@@ -47,6 +52,8 @@
     appCanvas.style.transform  = `scale(${scale})`;
     appCanvas.style.marginLeft = `${marginL}px`;
     appCanvas.style.marginTop  = `${marginT}px`;
+
+    scaleIndicator.textContent = Math.round(scale * 100) + '% of full size';
   }
 
   window.addEventListener('resize', scaleCanvas);
