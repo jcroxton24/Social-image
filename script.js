@@ -205,64 +205,30 @@
   let dragging  = false;
   let dragStart = {};
 
-  appCanvas.addEventListener('mousedown', e => {
-    if (e.target.classList.contains('handle')) return;
-    if (!state.img) return;
-
-    const pt = canvasPoint(e.clientX, e.clientY);
+  function startDrag(clientX, clientY) {
+    if (!state.img) return false;
+    const pt = canvasPoint(clientX, clientY);
     if (
       pt.x >= state.imgX && pt.x <= state.imgX + state.imgW &&
       pt.y >= state.imgY && pt.y <= state.imgY + state.imgH
     ) {
-      dragging = true;
-      appCanvas.style.cursor = 'grabbing';
+      dragging  = true;
       dragStart = { x: pt.x, y: pt.y, imgX: state.imgX, imgY: state.imgY };
-      e.preventDefault();
+      return true;
     }
-  });
+    return false;
+  }
 
-  document.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const pt   = canvasPoint(e.clientX, e.clientY);
+  function moveDrag(clientX, clientY) {
+    const pt   = canvasPoint(clientX, clientY);
     state.imgX = dragStart.imgX + (pt.x - dragStart.x);
     state.imgY = dragStart.imgY + (pt.y - dragStart.y);
     drawImage();
     positionHandles();
-  });
+  }
 
-  document.addEventListener('mouseup', () => {
-    if (dragging) {
-      dragging = false;
-      appCanvas.style.cursor = '';
-    }
-    resizing     = false;
-    resizeHandle = null;
-  });
-
-  // ── PROPORTIONAL RESIZE ───────────────────────────────────────
-  let resizing     = false;
-  let resizeHandle = null;
-  let resizeStart  = {};
-  const MIN_SIZE   = 80;
-
-  document.querySelectorAll('.handle').forEach(handle => {
-    handle.addEventListener('mousedown', e => {
-      e.stopPropagation();
-      e.preventDefault();
-      resizing     = true;
-      resizeHandle = handle.dataset.handle;
-      resizeStart  = {
-        imgX: state.imgX,
-        imgY: state.imgY,
-        imgW: state.imgW,
-        imgH: state.imgH,
-      };
-    });
-  });
-
-  document.addEventListener('mousemove', e => {
-    if (!resizing) return;
-    const pt     = canvasPoint(e.clientX, e.clientY);
+  function applyResize(clientX, clientY) {
+    const pt     = canvasPoint(clientX, clientY);
     const aspect = state.imgAspect;
     const { imgX, imgY, imgW, imgH } = resizeStart;
     let newX = imgX, newY = imgY, newW, newH;
@@ -295,6 +261,79 @@
     state.imgH = newH;
     drawImage();
     positionHandles();
+  }
+
+  // Mouse drag
+  appCanvas.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('handle')) return;
+    if (startDrag(e.clientX, e.clientY)) {
+      appCanvas.style.cursor = 'grabbing';
+      e.preventDefault();
+    }
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (dragging) moveDrag(e.clientX, e.clientY);
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (dragging) {
+      dragging = false;
+      appCanvas.style.cursor = '';
+    }
+    resizing     = false;
+    resizeHandle = null;
+  });
+
+  // Touch drag
+  appCanvas.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    if (e.target.classList.contains('handle')) return;
+    if (startDrag(e.touches[0].clientX, e.touches[0].clientY)) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  document.addEventListener('touchmove', e => {
+    if (!dragging && !resizing) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    if (dragging)  moveDrag(t.clientX, t.clientY);
+    if (resizing)  applyResize(t.clientX, t.clientY);
+  }, { passive: false });
+
+  document.addEventListener('touchend', () => {
+    dragging     = false;
+    resizing     = false;
+    resizeHandle = null;
+  });
+
+  // ── PROPORTIONAL RESIZE ───────────────────────────────────────
+  let resizing     = false;
+  let resizeHandle = null;
+  let resizeStart  = {};
+  const MIN_SIZE   = 80;
+
+  document.querySelectorAll('.handle').forEach(handle => {
+    function beginResize(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      resizing     = true;
+      resizeHandle = handle.dataset.handle;
+      resizeStart  = {
+        imgX: state.imgX,
+        imgY: state.imgY,
+        imgW: state.imgW,
+        imgH: state.imgH,
+      };
+    }
+    handle.addEventListener('mousedown', beginResize);
+    handle.addEventListener('touchstart', beginResize, { passive: false });
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!resizing) return;
+    applyResize(e.clientX, e.clientY);
   });
 
   // ── TEXT ──────────────────────────────────────────────────────
