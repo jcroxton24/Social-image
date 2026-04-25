@@ -26,6 +26,7 @@ html, body {
   min-width: 0;
   position: relative;
   overflow: hidden;            /* clips the image ghost so it never triggers scrollbars */
+  touch-action: none;          /* JS handles all touch events; prevents browser scroll/zoom */
   /* Checkerboard pattern clearly marks the working area boundary */
   background-color: #3a3a3a;
   background-image:
@@ -398,6 +399,30 @@ textarea::placeholder {
   padding: 10px 14px;
 }
 
+/* ── MOBILE-ONLY ELEMENTS (hidden on desktop) ────────────────── */
+#mobile-open-btn {
+  display: none;
+}
+
+#sheet-backdrop {
+  display: none;
+}
+
+#sheet-handle {
+  display: none;
+  justify-content: center;
+  padding: 14px 0 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+#sheet-handle-bar {
+  width: 36px;
+  height: 4px;
+  background: #444;
+  border-radius: 2px;
+}
+
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
 @media (pointer: coarse) {
   .handle {
@@ -408,28 +433,87 @@ textarea::placeholder {
 
 @media (max-width: 768px) {
   html, body {
-    height: auto;
-    overflow-y: auto;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 
   #app {
-    flex-direction: column;
-    height: auto;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
   }
 
-  #canvas-wrapper {
-    /* Height: portrait canvas ratio (1350/1080 = 1.25) × available width + 2× border */
-    height: calc(100vw * 1.25 + 96px);
-    min-height: 360px;
-    padding: 0;
-  }
-
+  /* Controls become a fixed bottom sheet, removed from flex flow */
   #controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     width: 100%;
-    flex-shrink: 0;
+    max-height: 82vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #1e1e1e;
     border-left: none;
-    border-top: 1px solid #2e2e2e;
-    padding: 24px 20px;
+    border-radius: 20px 20px 0 0;
+    border-top: 1px solid #333;
+    padding: 0 24px 40px;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    z-index: 300;
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  #controls.open {
+    transform: translateY(0);
+  }
+
+  #controls h1 {
+    padding-top: 8px;
+  }
+
+  #sheet-handle {
+    display: flex;
+  }
+
+  #sheet-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 250;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s;
+  }
+
+  #sheet-backdrop.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  #mobile-open-btn {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    background: rgba(10, 10, 10, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 24px;
+    padding: 12px 28px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  #scale-indicator {
+    bottom: 84px;
   }
 }

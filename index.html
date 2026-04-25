@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
   <title>Social Image Editor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,6 +17,7 @@
       <!-- Spacer gives the wrapper its scroll height; sized by JS -->
       <div id="canvas-spacer"></div>
       <div id="scale-indicator"></div>
+      <button id="mobile-open-btn">&#9776;&ensp;Options</button>
       <div id="canvas">
 
         <!-- Ghost: image overflow shown at 20% opacity, excluded from export -->
@@ -60,7 +61,10 @@
       </div>
     </div>
 
+    <div id="sheet-backdrop"></div>
+
     <aside id="controls">
+      <div id="sheet-handle"><div id="sheet-handle-bar"></div></div>
       <h1>Create Your Post</h1>
 
       <section class="control-group">

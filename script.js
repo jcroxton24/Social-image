@@ -202,8 +202,10 @@
   });
 
   // ── DRAG ──────────────────────────────────────────────────────
-  let dragging  = false;
-  let dragStart = {};
+  let dragging   = false;
+  let dragStart  = {};
+  let pinching   = false;
+  let pinchStart = {};
 
   function startDrag(clientX, clientY) {
     if (!state.img) return false;
@@ -285,27 +287,65 @@
     resizeHandle = null;
   });
 
-  // Touch drag
+  // Touch drag + pinch resize
+  function pinchDist(t) {
+    const dx = t[0].clientX - t[1].clientX;
+    const dy = t[0].clientY - t[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
   appCanvas.addEventListener('touchstart', e => {
-    if (e.touches.length !== 1) return;
-    if (e.target.classList.contains('handle')) return;
-    if (startDrag(e.touches[0].clientX, e.touches[0].clientY)) {
+    if (e.touches.length === 2 && state.img) {
+      dragging = false;
+      pinching = true;
       e.preventDefault();
+      const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const mid = canvasPoint(mx, my);
+      pinchStart = {
+        dist: pinchDist(e.touches),
+        imgX: state.imgX, imgY: state.imgY,
+        imgW: state.imgW, imgH: state.imgH,
+        relX: (mid.x - state.imgX) / state.imgW,
+        relY: (mid.y - state.imgY) / state.imgH,
+      };
+    } else if (e.touches.length === 1) {
+      if (e.target.classList.contains('handle')) return;
+      if (startDrag(e.touches[0].clientX, e.touches[0].clientY)) {
+        e.preventDefault();
+      }
     }
   }, { passive: false });
 
   document.addEventListener('touchmove', e => {
-    if (!dragging && !resizing) return;
+    if (!dragging && !resizing && !pinching) return;
     e.preventDefault();
-    const t = e.touches[0];
-    if (dragging)  moveDrag(t.clientX, t.clientY);
-    if (resizing)  applyResize(t.clientX, t.clientY);
+    if (pinching && e.touches.length === 2) {
+      const scale = pinchDist(e.touches) / pinchStart.dist;
+      const newW  = Math.max(MIN_SIZE, pinchStart.imgW * scale);
+      const newH  = newW / state.imgAspect;
+      const mx    = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const my    = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const mid   = canvasPoint(mx, my);
+      state.imgW  = newW;
+      state.imgH  = newH;
+      state.imgX  = mid.x - pinchStart.relX * newW;
+      state.imgY  = mid.y - pinchStart.relY * newH;
+      drawImage();
+      positionHandles();
+    } else {
+      const t = e.touches[0];
+      if (dragging) moveDrag(t.clientX, t.clientY);
+      if (resizing) applyResize(t.clientX, t.clientY);
+    }
   }, { passive: false });
 
-  document.addEventListener('touchend', () => {
-    dragging     = false;
-    resizing     = false;
-    resizeHandle = null;
+  document.addEventListener('touchend', e => {
+    if (e.touches.length === 0) {
+      dragging = false; resizing = false; resizeHandle = null; pinching = false;
+    } else if (e.touches.length === 1 && pinching) {
+      pinching = false;
+    }
   });
 
   // ── PROPORTIONAL RESIZE ───────────────────────────────────────
@@ -363,6 +403,19 @@
   watermark3Toggle.addEventListener('change', () => {
     watermark3Layer.style.display = watermark3Toggle.checked ? 'block' : 'none';
   });
+
+  // ── MOBILE BOTTOM SHEET ───────────────────────────────────────
+  const mobileOpenBtn  = document.getElementById('mobile-open-btn');
+  const sheetBackdrop  = document.getElementById('sheet-backdrop');
+  const controlsPanel  = document.getElementById('controls');
+  const sheetHandle    = document.getElementById('sheet-handle');
+
+  function openSheet()  { controlsPanel.classList.add('open');    sheetBackdrop.classList.add('open'); }
+  function closeSheet() { controlsPanel.classList.remove('open'); sheetBackdrop.classList.remove('open'); }
+
+  mobileOpenBtn.addEventListener('click', openSheet);
+  sheetBackdrop.addEventListener('click', closeSheet);
+  sheetHandle.addEventListener('click', closeSheet);
 
   // ── PNG DPI INJECTION ─────────────────────────────────────────
   const CRC_TABLE = (function () {
