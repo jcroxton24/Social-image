@@ -414,8 +414,10 @@
   function closeSheet() { controlsPanel.classList.remove('open'); sheetBackdrop.classList.remove('open'); }
 
   mobileOpenBtn.addEventListener('click', openSheet);
+  mobileOpenBtn.addEventListener('touchend', e => { e.preventDefault(); openSheet(); });
   sheetBackdrop.addEventListener('click', closeSheet);
   sheetHandle.addEventListener('click', closeSheet);
+  sheetHandle.addEventListener('touchend', e => { e.preventDefault(); closeSheet(); });
 
   // ── PNG DPI INJECTION ─────────────────────────────────────────
   const CRC_TABLE = (function () {
