@@ -13,32 +13,34 @@
   };
 
   // ── ELEMENT REFS ──────────────────────────────────────────────
-  const appCanvas        = document.getElementById('canvas');
-  const wrapper          = document.getElementById('canvas-wrapper');
-  const canvasSpacer     = document.getElementById('canvas-spacer');
-  const scaleIndicator   = document.getElementById('scale-indicator');
-  const imageGhost       = document.getElementById('image-ghost');
-  const imageCanvas      = document.getElementById('image-layer');
-  const imageHandles     = document.getElementById('image-handles');
-  const selBorder        = document.getElementById('selection-border');
-  const headlineInput    = document.getElementById('headline-input');
-  const headlineDisplay  = document.getElementById('headline-display');
-  const uploadBtn        = document.getElementById('upload-btn');
-  const fileInput        = document.getElementById('file-input');
-  const urlInput         = document.getElementById('url-input');
-  const urlBtn           = document.getElementById('url-btn');
-  const removeBtn        = document.getElementById('remove-btn');
-  const centreBtn        = document.getElementById('centre-btn');
-  const watermarkToggle  = document.getElementById('watermark-toggle');
-  const watermarkLayer   = document.getElementById('watermark-layer');
-  const exportBtn        = document.getElementById('export-btn');
-  const emptyHint        = document.getElementById('canvas-empty-hint');
+  const appCanvas       = document.getElementById('canvas');
+  const wrapper         = document.getElementById('canvas-wrapper');
+  const canvasSpacer    = document.getElementById('canvas-spacer');
+  const scaleIndicator  = document.getElementById('scale-indicator');
+  const imageGhost      = document.getElementById('image-ghost');
+  const imageCanvas     = document.getElementById('image-layer');
+  const imageHandles    = document.getElementById('image-handles');
+  const selBorder       = document.getElementById('selection-border');
+  const headlineInput   = document.getElementById('headline-input');
+  const headlineDisplay = document.getElementById('headline-display');
+  const uploadBtn       = document.getElementById('upload-btn');
+  const fileInput       = document.getElementById('file-input');
+  const urlInput        = document.getElementById('url-input');
+  const urlBtn          = document.getElementById('url-btn');
+  const removeBtn       = document.getElementById('remove-btn');
+  const watermarkBtn    = document.getElementById('watermark-btn');
+  const watermarkLayer  = document.getElementById('watermark-layer');
+  const exportBtn       = document.getElementById('export-btn');
 
   const ctx = imageCanvas.getContext('2d');
   imageCanvas.width  = 1080;
   imageCanvas.height = 1350;
 
   // ── CANVAS SCALING ────────────────────────────────────────────
+  // The canvas is position:absolute inside the wrapper.
+  // JS sets left/top directly — no flex centering involved, so there
+  // is no conflict between the layout box (1080×1350) and the visual
+  // scaled size. The spacer gives the wrapper its correct scroll height.
   let currentScale = 1;
   const BORDER = 48;
 
@@ -59,10 +61,12 @@
     appCanvas.style.left      = `${left}px`;
     appCanvas.style.top       = `${top}px`;
 
+    // Spacer sets the wrapper's scroll dimensions so the canvas + borders
+    // are always reachable if the viewport is unusually small.
     canvasSpacer.style.width  = `${wrapper.clientWidth}px`;
     canvasSpacer.style.height = `${top + scaledH + BORDER}px`;
 
-    scaleIndicator.textContent = Math.round(scale * 100) + '%';
+    scaleIndicator.textContent = Math.round(scale * 100) + '% of full size';
   }
 
   window.addEventListener('resize', scaleCanvas);
@@ -120,7 +124,7 @@
     });
   }
 
-  // ── APPLY IMAGE (shared by all load paths) ────────────────────
+  // ── APPLY IMAGE (shared by file upload and URL load) ──────────
   function applyImage(img) {
     state.img       = img;
     state.imgAspect = img.naturalWidth / img.naturalHeight;
@@ -132,70 +136,25 @@
     state.imgY = (1350 - state.imgH) / 2;
 
     imageGhost.src           = img.src;
-    imageGhost.style.display = 'block';
-    removeBtn.style.display  = 'block';
-    centreBtn.style.display  = 'block';
-    emptyHint.style.display  = 'none';
+    imageGhost.style.display = '';
+    removeBtn.style.display  = '';
 
     drawImage();
     positionHandles();
     imageHandles.classList.remove('hidden');
   }
 
-  // ── LOAD FILE (shared by file input, drag-and-drop, paste) ────
-  function loadFile(file) {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    uploadBtn.textContent = 'Loading…';
-    uploadBtn.disabled    = true;
-    img.onload = () => {
-      applyImage(img);
-      uploadBtn.textContent = 'Upload from computer';
-      uploadBtn.disabled    = false;
-      fileInput.value       = '';
-    };
-    img.onerror = () => {
-      uploadBtn.textContent = 'Upload from computer';
-      uploadBtn.disabled    = false;
-      fileInput.value       = '';
-    };
-    img.src = url;
-  }
-
   // ── FILE UPLOAD ───────────────────────────────────────────────
   uploadBtn.addEventListener('click', () => fileInput.click());
+
   fileInput.addEventListener('change', e => {
     const file = e.target.files[0];
-    if (file) loadFile(file);
-  });
-
-  // ── DRAG-AND-DROP ─────────────────────────────────────────────
-  wrapper.addEventListener('dragover', e => {
-    e.preventDefault();
-    wrapper.classList.add('drag-over');
-  });
-
-  wrapper.addEventListener('dragleave', e => {
-    if (!wrapper.contains(e.relatedTarget)) wrapper.classList.remove('drag-over');
-  });
-
-  wrapper.addEventListener('drop', e => {
-    e.preventDefault();
-    wrapper.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) loadFile(file);
-  });
-
-  // ── PASTE FROM CLIPBOARD ──────────────────────────────────────
-  document.addEventListener('paste', e => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    for (const item of items) {
-      if (item.type.startsWith('image/')) {
-        const file = item.getAsFile();
-        if (file) { loadFile(file); break; }
-      }
-    }
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => applyImage(img);
+    img.src    = url;
+    fileInput.value = '';
   });
 
   // ── URL UPLOAD ────────────────────────────────────────────────
@@ -234,27 +193,12 @@
 
   // ── REMOVE IMAGE ─────────────────────────────────────────────
   removeBtn.addEventListener('click', () => {
-    if (!confirm('Remove the current image?')) return;
     state.img = null;
     ctx.clearRect(0, 0, 1080, 1350);
     imageGhost.src           = '';
     imageGhost.style.display = 'none';
     imageHandles.classList.add('hidden');
     removeBtn.style.display  = 'none';
-    centreBtn.style.display  = 'none';
-    emptyHint.style.display  = 'flex';
-  });
-
-  // ── CENTRE IMAGE ──────────────────────────────────────────────
-  centreBtn.addEventListener('click', () => {
-    if (!state.img) return;
-    const fit  = Math.max(1080 / state.img.naturalWidth, 1350 / state.img.naturalHeight);
-    state.imgW = state.img.naturalWidth  * fit;
-    state.imgH = state.img.naturalHeight * fit;
-    state.imgX = (1080 - state.imgW) / 2;
-    state.imgY = (1350 - state.imgH) / 2;
-    drawImage();
-    positionHandles();
   });
 
   // ── DRAG ──────────────────────────────────────────────────────
@@ -437,20 +381,25 @@
     headlineDisplay.textContent = headlineInput.value;
   });
 
-  // ── WATERMARK TOGGLES ─────────────────────────────────────────
-  watermarkToggle.addEventListener('change', () => {
-    state.watermarkVisible       = watermarkToggle.checked;
-    watermarkLayer.style.display = watermarkToggle.checked ? '' : 'none';
+  // ── WATERMARK TOGGLE ──────────────────────────────────────────
+  watermarkBtn.addEventListener('click', () => {
+    state.watermarkVisible        = !state.watermarkVisible;
+    watermarkLayer.style.display  = state.watermarkVisible ? '' : 'none';
+    watermarkBtn.textContent      = state.watermarkVisible ? 'Hide Watermark' : 'Show Watermark';
   });
 
+  // ── SECONDARY WATERMARK TOGGLE ────────────────────────────────
   const watermark2Layer  = document.getElementById('watermark2-layer');
   const watermark2Toggle = document.getElementById('watermark2-toggle');
+
   watermark2Toggle.addEventListener('change', () => {
     watermark2Layer.style.display = watermark2Toggle.checked ? 'block' : 'none';
   });
 
+  // ── THIRD WATERMARK TOGGLE ─────────────────────────────────────
   const watermark3Layer  = document.getElementById('watermark3-layer');
   const watermark3Toggle = document.getElementById('watermark3-toggle');
+
   watermark3Toggle.addEventListener('change', () => {
     watermark3Layer.style.display = watermark3Toggle.checked ? 'block' : 'none';
   });
@@ -469,11 +418,6 @@
   sheetBackdrop.addEventListener('click', closeSheet);
   sheetHandle.addEventListener('click', closeSheet);
   sheetHandle.addEventListener('touchend', e => { e.preventDefault(); closeSheet(); });
-
-  // ── HINT TEXT (coarse pointer = touch device) ─────────────────
-  if (window.matchMedia('(pointer: coarse)').matches) {
-    document.querySelector('.drag-hint').textContent = 'Drag to reposition. Pinch to resize.';
-  }
 
   // ── PNG DPI INJECTION ─────────────────────────────────────────
   const CRC_TABLE = (function () {

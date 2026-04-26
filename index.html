@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -49,9 +49,6 @@
           <img id="watermark3-img" src="https://cdn.mos.cms.futurecdn.net/fko79tmMy6qTroLb6KpiP3.png" crossorigin="anonymous" alt="Third watermark">
         </div>
 
-        <!-- Empty state hint — excluded from export -->
-        <div id="canvas-empty-hint" data-html2canvas-ignore></div>
-
         <!-- Layer 5: Drag/resize handles (corners only — proportional scale) -->
         <div id="image-handles" class="hidden">
           <div id="selection-border"></div>
@@ -79,8 +76,7 @@
           <button id="url-btn">Load</button>
         </div>
         <button id="remove-btn" style="display:none">Remove Image</button>
-        <button id="centre-btn" style="display:none">Centre &amp; Fit</button>
-        <p class="hint"><span class="drag-hint">Drag to reposition. Pull corners to resize.</span></p>
+        <p class="hint">Drag to reposition. Pull corners to resize.</p>
       </section>
 
       <section class="control-group">
@@ -89,14 +85,10 @@
       </section>
 
       <section class="control-group">
-        <label>Watermarks</label>
-        <div class="toggle-row">
-          <label>Main</label>
-          <label class="toggle">
-            <input type="checkbox" id="watermark-toggle" checked>
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
+        <button id="watermark-btn">Hide Watermark</button>
+      </section>
+
+      <section class="control-group">
         <div class="toggle-row">
           <label>Arrows</label>
           <label class="toggle">
@@ -104,6 +96,9 @@
             <span class="toggle-slider"></span>
           </label>
         </div>
+      </section>
+
+      <section class="control-group">
         <div class="toggle-row">
           <label>Buyer's Guide</label>
           <label class="toggle">
@@ -113,7 +108,7 @@
         </div>
       </section>
 
-      <section id="export-section" class="control-group">
+      <section class="control-group">
         <button id="export-btn" class="primary">Download Image</button>
       </section>
     </aside>
