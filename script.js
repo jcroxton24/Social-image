@@ -102,6 +102,18 @@
     imageGhost.style.height = state.imgH + 'px';
   }
 
+  // ── THROTTLED REDRAW (RAF) ────────────────────────────────────
+  // Coalesces rapid mousemove/touchmove redraws to one per animation frame.
+  let rafId = null;
+  function scheduleRedraw() {
+    if (rafId !== null) return;
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      drawImage();
+      positionHandles();
+    });
+  }
+
   // ── HANDLE POSITIONING ────────────────────────────────────────
   function positionHandles() {
     const { imgX: x, imgY: y, imgW: w, imgH: h } = state;
@@ -319,8 +331,7 @@
     const pt   = canvasPoint(clientX, clientY);
     state.imgX = dragStart.imgX + (pt.x - dragStart.x);
     state.imgY = dragStart.imgY + (pt.y - dragStart.y);
-    drawImage();
-    positionHandles();
+    scheduleRedraw();
   }
 
   function applyResize(clientX, clientY) {
@@ -330,22 +341,22 @@
     let newX = imgX, newY = imgY, newW, newH;
 
     if (resizeHandle === 'br') {
-      newW = Math.max(MIN_SIZE, pt.x - imgX);
+      newW = Math.max(MIN_SIZE, Math.min(MAX_SIZE, pt.x - imgX));
       newH = newW / aspect;
       newX = imgX;
       newY = imgY;
     } else if (resizeHandle === 'bl') {
-      newW = Math.max(MIN_SIZE, (imgX + imgW) - pt.x);
+      newW = Math.max(MIN_SIZE, Math.min(MAX_SIZE, (imgX + imgW) - pt.x));
       newH = newW / aspect;
       newX = (imgX + imgW) - newW;
       newY = imgY;
     } else if (resizeHandle === 'tr') {
-      newW = Math.max(MIN_SIZE, pt.x - imgX);
+      newW = Math.max(MIN_SIZE, Math.min(MAX_SIZE, pt.x - imgX));
       newH = newW / aspect;
       newX = imgX;
       newY = (imgY + imgH) - newH;
     } else {
-      newW = Math.max(MIN_SIZE, (imgX + imgW) - pt.x);
+      newW = Math.max(MIN_SIZE, Math.min(MAX_SIZE, (imgX + imgW) - pt.x));
       newH = newW / aspect;
       newX = (imgX + imgW) - newW;
       newY = (imgY + imgH) - newH;
@@ -355,8 +366,7 @@
     state.imgY = newY;
     state.imgW = newW;
     state.imgH = newH;
-    drawImage();
-    positionHandles();
+    scheduleRedraw();
   }
 
   // Mouse drag
@@ -421,7 +431,7 @@
     e.preventDefault();
     if (pinching && e.touches.length === 2) {
       const scale = pinchDist(e.touches) / pinchStart.dist;
-      const newW  = Math.max(MIN_SIZE, pinchStart.imgW * scale);
+      const newW  = Math.max(MIN_SIZE, Math.min(MAX_SIZE, pinchStart.imgW * scale));
       const newH  = newW / state.imgAspect;
       const mx    = (e.touches[0].clientX + e.touches[1].clientX) / 2;
       const my    = (e.touches[0].clientY + e.touches[1].clientY) / 2;
@@ -430,8 +440,7 @@
       state.imgH  = newH;
       state.imgX  = mid.x - pinchStart.relX * newW;
       state.imgY  = mid.y - pinchStart.relY * newH;
-      drawImage();
-      positionHandles();
+      scheduleRedraw();
     } else {
       const t = e.touches[0];
       if (dragging) moveDrag(t.clientX, t.clientY);
@@ -454,6 +463,7 @@
   let resizeHandle = null;
   let resizeStart  = {};
   const MIN_SIZE   = 80;
+  const MAX_SIZE   = 5400; // 5× canvas width — prevents OOM on extreme resize
 
   document.querySelectorAll('.handle').forEach(handle => {
     function beginResize(e) {
