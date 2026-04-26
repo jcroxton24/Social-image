@@ -652,23 +652,19 @@
       const dpiDataUrl = writePngDpi(rawDataUrl, 200);
       const blob       = dataUrlToBlob(dpiDataUrl);
 
-      // Try Web Share API on mobile (works after await; shows native save sheet).
-      // Fall back to blob URL download on any failure or on desktop.
-      let saved = false;
-      if (window.matchMedia('(pointer: coarse)').matches && navigator.canShare) {
+      // On mobile, link.click() is blocked after an await (user gesture is lost).
+      // Use the Web Share API instead, which works within the native share sheet.
+      const isMobile = window.matchMedia('(pointer: coarse)').matches;
+      if (isMobile && navigator.canShare) {
         const file = new File([blob], 'social-image.png', { type: 'image/png' });
         if (navigator.canShare({ files: [file] })) {
           try {
             await navigator.share({ files: [file] });
-            saved = true;
           } catch (shareErr) {
-            if (shareErr.name === 'AbortError') saved = true; // user cancelled — fine
-            // any other error: fall through to blob URL download below
+            if (shareErr.name !== 'AbortError') throw shareErr;
           }
         }
-      }
-
-      if (!saved) {
+      } else {
         const blobUrl = URL.createObjectURL(blob);
         const link    = document.createElement('a');
         link.download = 'social-image.png';
