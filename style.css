@@ -82,6 +82,47 @@ html, body {
   cursor: default;
 }
 
+/* Empty state hint — centred on canvas, excluded from export */
+#canvas-empty-hint {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1080px;
+  height: 1350px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+  pointer-events: none;
+  z-index: 0;
+  font-size: 28px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.12);
+  text-align: center;
+  padding: 80px;
+  line-height: 1.5;
+}
+
+#canvas-empty-hint::before {
+  content: '↑';
+  font-size: 64px;
+  opacity: 0.4;
+  display: block;
+}
+
+/* Drag-over highlight */
+#canvas-wrapper.drag-over::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 4px dashed rgba(124, 58, 237, 0.7);
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 100;
+  background: rgba(124, 58, 237, 0.06);
+}
+
 /* Ghost — overflow shown at 20% opacity, excluded from export */
 #image-ghost {
   position: absolute;
@@ -569,6 +610,20 @@ textarea::placeholder {
   }
 
   #scale-indicator {
-    bottom: 86px;
+    display: none;
+  }
+
+  #export-section {
+    position: sticky;
+    bottom: 0;
+    background: #141414;
+    border-top: 1px solid #2a2a2a;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    margin: 4px -14px -48px;
+    padding: 12px 14px env(safe-area-inset-bottom, 16px);
+    z-index: 5;
   }
 }
