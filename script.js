@@ -32,7 +32,6 @@
   const watermarkToggle  = document.getElementById('watermark-toggle');
   const watermarkLayer   = document.getElementById('watermark-layer');
   const exportBtn        = document.getElementById('export-btn');
-  const qualityToast     = document.getElementById('quality-toast');
 
   const ctx = imageCanvas.getContext('2d');
   imageCanvas.width  = 1080;
@@ -101,18 +100,6 @@
     imageGhost.style.top    = state.imgY + 'px';
     imageGhost.style.width  = state.imgW + 'px';
     imageGhost.style.height = state.imgH + 'px';
-  }
-
-  // ── QUALITY WARNING TOAST ─────────────────────────────────────
-  let toastTimer = null;
-  function showQualityWarning(img) {
-    if (img.naturalWidth >= 1080 && img.naturalHeight >= 1350) return;
-    clearTimeout(toastTimer);
-    qualityToast.textContent =
-      `This image is ${img.naturalWidth}×${img.naturalHeight}px — smaller than ` +
-      `1080×1350 and may appear blurry when exported.`;
-    qualityToast.classList.add('visible');
-    toastTimer = setTimeout(() => qualityToast.classList.remove('visible'), 5000);
   }
 
   // ── THROTTLED REDRAW (RAF) ────────────────────────────────────
@@ -242,7 +229,6 @@
     drawImage();
     positionHandles();
     imageHandles.classList.remove('hidden');
-    showQualityWarning(img);
   }
 
   // ── FILE UPLOAD ───────────────────────────────────────────────

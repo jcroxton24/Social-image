@@ -462,33 +462,6 @@ textarea::placeholder {
   border-radius: 999px;
 }
 
-/* ── QUALITY WARNING TOAST ───────────────────────────────────── */
-#quality-toast {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%) translateY(12px);
-  background: #2a1a06;
-  border: 1px solid #b45309;
-  color: #fbbf24;
-  font-size: 13px;
-  line-height: 1.4;
-  padding: 10px 16px;
-  border-radius: 8px;
-  max-width: min(420px, calc(100vw - 32px));
-  text-align: center;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-  z-index: 500;
-  white-space: normal;
-}
-
-#quality-toast.visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
 @media (pointer: coarse) {
   .handle {
@@ -597,9 +570,5 @@ textarea::placeholder {
 
   #scale-indicator {
     bottom: 86px;
-  }
-
-  #quality-toast {
-    bottom: 96px; /* sit above the Options button */
   }
 }
