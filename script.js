@@ -67,7 +67,7 @@
     canvasSpacer.style.width  = `${wrapper.clientWidth}px`;
     canvasSpacer.style.height = `${top + scaledH + BORDER}px`;
 
-    scaleIndicator.textContent = Math.round(scale * 100) + '% of full size';
+    scaleIndicator.textContent = Math.round(scale * 100) + '%';
   }
 
   window.addEventListener('resize', scaleCanvas);
