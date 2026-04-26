@@ -13,24 +13,25 @@
   };
 
   // ── ELEMENT REFS ──────────────────────────────────────────────
-  const appCanvas       = document.getElementById('canvas');
-  const wrapper         = document.getElementById('canvas-wrapper');
-  const canvasSpacer    = document.getElementById('canvas-spacer');
-  const scaleIndicator  = document.getElementById('scale-indicator');
-  const imageGhost      = document.getElementById('image-ghost');
-  const imageCanvas     = document.getElementById('image-layer');
-  const imageHandles    = document.getElementById('image-handles');
-  const selBorder       = document.getElementById('selection-border');
-  const headlineInput   = document.getElementById('headline-input');
-  const headlineDisplay = document.getElementById('headline-display');
-  const uploadBtn       = document.getElementById('upload-btn');
-  const fileInput       = document.getElementById('file-input');
-  const urlInput        = document.getElementById('url-input');
-  const urlBtn          = document.getElementById('url-btn');
-  const removeBtn       = document.getElementById('remove-btn');
-  const watermarkBtn    = document.getElementById('watermark-btn');
-  const watermarkLayer  = document.getElementById('watermark-layer');
-  const exportBtn       = document.getElementById('export-btn');
+  const appCanvas        = document.getElementById('canvas');
+  const wrapper          = document.getElementById('canvas-wrapper');
+  const canvasSpacer     = document.getElementById('canvas-spacer');
+  const scaleIndicator   = document.getElementById('scale-indicator');
+  const imageGhost       = document.getElementById('image-ghost');
+  const imageCanvas      = document.getElementById('image-layer');
+  const imageHandles     = document.getElementById('image-handles');
+  const selBorder        = document.getElementById('selection-border');
+  const headlineInput    = document.getElementById('headline-input');
+  const headlineDisplay  = document.getElementById('headline-display');
+  const uploadBtn        = document.getElementById('upload-btn');
+  const fileInput        = document.getElementById('file-input');
+  const urlInput         = document.getElementById('url-input');
+  const urlBtn           = document.getElementById('url-btn');
+  const removeBtn        = document.getElementById('remove-btn');
+  const undoBtn          = document.getElementById('undo-btn');
+  const watermarkToggle  = document.getElementById('watermark-toggle');
+  const watermarkLayer   = document.getElementById('watermark-layer');
+  const exportBtn        = document.getElementById('export-btn');
 
   const ctx = imageCanvas.getContext('2d');
   imageCanvas.width  = 1080;
@@ -124,8 +125,82 @@
     });
   }
 
-  // ── APPLY IMAGE (shared by file upload and URL load) ──────────
+  // ── UNDO STACK ────────────────────────────────────────────────
+  const MAX_UNDO = 50;
+  const undoStack = [];
+  let opSnapshot = null; // saved at drag/resize start; committed only if state changed
+
+  function snapshotState() {
+    return {
+      img:       state.img,
+      imgX:      state.imgX,
+      imgY:      state.imgY,
+      imgW:      state.imgW,
+      imgH:      state.imgH,
+      imgAspect: state.imgAspect,
+    };
+  }
+
+  // Push unconditionally — for applyImage / remove where state always changes
+  function pushUndo() {
+    undoStack.push(snapshotState());
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    undoBtn.disabled = false;
+  }
+
+  // Save a snapshot at the start of a drag/resize operation
+  function beginOp() {
+    opSnapshot = snapshotState();
+  }
+
+  // Commit the snapshot only if the operation actually changed state
+  function commitOp() {
+    if (!opSnapshot) return;
+    const s = opSnapshot;
+    opSnapshot = null;
+    if (
+      s.imgX !== state.imgX || s.imgY !== state.imgY ||
+      s.imgW !== state.imgW || s.imgH !== state.imgH ||
+      s.img  !== state.img
+    ) {
+      undoStack.push(s);
+      if (undoStack.length > MAX_UNDO) undoStack.shift();
+      undoBtn.disabled = false;
+    }
+  }
+
+  function undo() {
+    if (!undoStack.length) return;
+    const prev = undoStack.pop();
+    state.img       = prev.img;
+    state.imgX      = prev.imgX;
+    state.imgY      = prev.imgY;
+    state.imgW      = prev.imgW;
+    state.imgH      = prev.imgH;
+    state.imgAspect = prev.imgAspect;
+    if (state.img) {
+      imageGhost.src           = state.img.src;
+      imageGhost.style.display = 'block';
+      removeBtn.style.display  = '';
+      drawImage();
+      positionHandles();
+      imageHandles.classList.remove('hidden');
+    } else {
+      ctx.clearRect(0, 0, 1080, 1350);
+      imageGhost.src           = '';
+      imageGhost.style.display = 'none';
+      imageHandles.classList.add('hidden');
+      removeBtn.style.display  = 'none';
+    }
+    undoBtn.disabled = undoStack.length === 0;
+  }
+
+  undoBtn.addEventListener('click', undo);
+
+  // ── APPLY IMAGE (shared by all load paths) ────────────────────
   function applyImage(img) {
+    pushUndo();
+
     state.img       = img;
     state.imgAspect = img.naturalWidth / img.naturalHeight;
 
@@ -136,7 +211,7 @@
     state.imgY = (1350 - state.imgH) / 2;
 
     imageGhost.src           = img.src;
-    imageGhost.style.display = '';
+    imageGhost.style.display = 'block';
     removeBtn.style.display  = '';
 
     drawImage();
@@ -155,6 +230,23 @@
     img.onload = () => applyImage(img);
     img.src    = url;
     fileInput.value = '';
+  });
+
+  // ── PASTE FROM CLIPBOARD ──────────────────────────────────────
+  document.addEventListener('paste', e => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (!file) continue;
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => applyImage(img);
+        img.src = url;
+        break;
+      }
+    }
   });
 
   // ── URL UPLOAD ────────────────────────────────────────────────
@@ -193,6 +285,7 @@
 
   // ── REMOVE IMAGE ─────────────────────────────────────────────
   removeBtn.addEventListener('click', () => {
+    pushUndo();
     state.img = null;
     ctx.clearRect(0, 0, 1080, 1350);
     imageGhost.src           = '';
@@ -216,6 +309,7 @@
     ) {
       dragging  = true;
       dragStart = { x: pt.x, y: pt.y, imgX: state.imgX, imgY: state.imgY };
+      beginOp();
       return true;
     }
     return false;
@@ -282,8 +376,12 @@
     if (dragging) {
       dragging = false;
       appCanvas.style.cursor = '';
+      commitOp();
     }
-    resizing     = false;
+    if (resizing) {
+      resizing = false;
+      commitOp();
+    }
     resizeHandle = null;
   });
 
@@ -298,6 +396,7 @@
     if (e.touches.length === 2 && state.img) {
       dragging = false;
       pinching = true;
+      beginOp();
       e.preventDefault();
       const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
       const my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
@@ -342,8 +441,10 @@
 
   document.addEventListener('touchend', e => {
     if (e.touches.length === 0) {
+      if (dragging || resizing || pinching) commitOp();
       dragging = false; resizing = false; resizeHandle = null; pinching = false;
     } else if (e.touches.length === 1 && pinching) {
+      commitOp();
       pinching = false;
     }
   });
@@ -366,6 +467,7 @@
         imgW: state.imgW,
         imgH: state.imgH,
       };
+      beginOp();
     }
     handle.addEventListener('mousedown', beginResize);
     handle.addEventListener('touchstart', beginResize, { passive: false });
@@ -376,30 +478,34 @@
     applyResize(e.clientX, e.clientY);
   });
 
+  // ── KEYBOARD SHORTCUTS ────────────────────────────────────────
+  document.addEventListener('keydown', e => {
+    const mod = e.metaKey || e.ctrlKey;
+    if (mod && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      undo();
+    }
+  });
+
   // ── TEXT ──────────────────────────────────────────────────────
   headlineInput.addEventListener('input', () => {
     headlineDisplay.textContent = headlineInput.value;
   });
 
-  // ── WATERMARK TOGGLE ──────────────────────────────────────────
-  watermarkBtn.addEventListener('click', () => {
-    state.watermarkVisible        = !state.watermarkVisible;
-    watermarkLayer.style.display  = state.watermarkVisible ? '' : 'none';
-    watermarkBtn.textContent      = state.watermarkVisible ? 'Hide Watermark' : 'Show Watermark';
+  // ── WATERMARK TOGGLES ─────────────────────────────────────────
+  watermarkToggle.addEventListener('change', () => {
+    state.watermarkVisible       = watermarkToggle.checked;
+    watermarkLayer.style.display = watermarkToggle.checked ? '' : 'none';
   });
 
-  // ── SECONDARY WATERMARK TOGGLE ────────────────────────────────
   const watermark2Layer  = document.getElementById('watermark2-layer');
   const watermark2Toggle = document.getElementById('watermark2-toggle');
-
   watermark2Toggle.addEventListener('change', () => {
     watermark2Layer.style.display = watermark2Toggle.checked ? 'block' : 'none';
   });
 
-  // ── THIRD WATERMARK TOGGLE ─────────────────────────────────────
   const watermark3Layer  = document.getElementById('watermark3-layer');
   const watermark3Toggle = document.getElementById('watermark3-toggle');
-
   watermark3Toggle.addEventListener('change', () => {
     watermark3Layer.style.display = watermark3Toggle.checked ? 'block' : 'none';
   });

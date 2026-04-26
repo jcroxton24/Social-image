@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -76,6 +76,7 @@
           <button id="url-btn">Load</button>
         </div>
         <button id="remove-btn" style="display:none">Remove Image</button>
+        <button id="undo-btn" disabled>Undo</button>
         <p class="hint">Drag to reposition. Pull corners to resize.</p>
       </section>
 
@@ -85,10 +86,14 @@
       </section>
 
       <section class="control-group">
-        <button id="watermark-btn">Hide Watermark</button>
-      </section>
-
-      <section class="control-group">
+        <label>Watermarks</label>
+        <div class="toggle-row">
+          <label>Main</label>
+          <label class="toggle">
+            <input type="checkbox" id="watermark-toggle" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
         <div class="toggle-row">
           <label>Arrows</label>
           <label class="toggle">
@@ -96,9 +101,6 @@
             <span class="toggle-slider"></span>
           </label>
         </div>
-      </section>
-
-      <section class="control-group">
         <div class="toggle-row">
           <label>Buyer's Guide</label>
           <label class="toggle">
