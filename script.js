@@ -549,6 +549,16 @@
   sheetHandle.addEventListener('click', closeSheet);
   sheetHandle.addEventListener('touchend', e => { e.preventDefault(); closeSheet(); });
 
+  // ── DATA URL → BLOB ───────────────────────────────────────────
+  function dataUrlToBlob(dataUrl) {
+    const [header, b64] = dataUrl.split(',');
+    const mime  = header.match(/:(.*?);/)[1];
+    const bytes = atob(b64);
+    const arr   = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }
+
   // ── PNG DPI INJECTION ─────────────────────────────────────────
   const CRC_TABLE = (function () {
     const t = new Uint32Array(256);
@@ -640,11 +650,30 @@
 
       const rawDataUrl = output.toDataURL('image/png');
       const dpiDataUrl = writePngDpi(rawDataUrl, 200);
+      const blob       = dataUrlToBlob(dpiDataUrl);
 
-      const link    = document.createElement('a');
-      link.download = 'social-image.png';
-      link.href     = dpiDataUrl;
-      link.click();
+      // On mobile, link.click() is blocked after an await (user gesture is lost).
+      // Use the Web Share API instead, which works within the native share sheet.
+      const isMobile = window.matchMedia('(pointer: coarse)').matches;
+      if (isMobile && navigator.canShare) {
+        const file = new File([blob], 'social-image.png', { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file] });
+          } catch (shareErr) {
+            if (shareErr.name !== 'AbortError') throw shareErr;
+          }
+        }
+      } else {
+        const blobUrl = URL.createObjectURL(blob);
+        const link    = document.createElement('a');
+        link.download = 'social-image.png';
+        link.href     = blobUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      }
     } catch (err) {
       console.error('Export failed:', err);
       alert('Export failed. Please try again.');
